@@ -17,3 +17,15 @@ def setSeed(seed):
 
     os.environ['TF_CUDNN_DETERMINISTIC'] = 'true'
     os.environ['TF_DETERMINISTIC_OPS'] = 'true'
+
+
+
+#computes the validation loss on some model
+def model_validation_loss(model, val_x, val_y):
+    y_pred = model.predict(val_x, verbose=0)
+    bce = tf.keras.losses.BinaryCrossentropy(from_logits=False)
+    val_loss = bce(val_y, y_pred).numpy()
+    return val_loss
+
+
+
