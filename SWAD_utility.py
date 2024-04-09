@@ -30,6 +30,26 @@ def oneNGreaterThan(val_loss, N, curr_val, last):
 
 
 
+
+#returns the average loss over a pre determined range
+def AveragedLoss(val_loss, N, curr_val, last):
+
+    if last:
+        if curr_val-N <= 0:
+            return -1
+
+        last_n_vals = val_loss[curr_val-N:curr_val]
+
+    else:
+        if len(val_loss)-curr_val-N <= 0:
+            return -1
+        
+        last_n_vals = val_loss[curr_val+1:curr_val+N+1]
+
+    return (sum(last_n_vals) / len(last_n_vals))
+
+
+
 #Probaby could be re written
 #averages weights in "Weights/" folder and returned averaged model parameters between two points (ts and te)
 #max load is the maximum number of weights that should be loaded into memory at once
@@ -57,7 +77,7 @@ def AverageWeights(model, ts, te, max_load):
         new_weights.clear()
 
         for j in range(curr, curr+max_load):
-            model.load_weights(folder_prefix + str(j) + ".h5")
+            model.load_weights(folder_prefix + str(j) + ".weights.h5")
             weight_set.append(model.get_weights())
             curr += 1
         
@@ -67,7 +87,7 @@ def AverageWeights(model, ts, te, max_load):
                 )
 
         model.set_weights(new_weights)
-        model.save_weights(folder_prefix + str(current_averaged) + ".h5")
+        model.save_weights(folder_prefix + str(current_averaged) + ".weights.h5")
         current_averaged += 1
 
     #average the remaining weights if there are any
@@ -75,7 +95,7 @@ def AverageWeights(model, ts, te, max_load):
         weight_set.clear()
         new_weights.clear()
         for i in range(curr, curr+remainder):
-            model.load_weights(folder_prefix + str(i) + ".h5")
+            model.load_weights(folder_prefix + str(i) + ".weights.h5")
             weight_set.append(model.get_weights())
             curr += 1
 
@@ -85,14 +105,14 @@ def AverageWeights(model, ts, te, max_load):
                     )
 
         model.set_weights(new_weights)
-        model.save_weights(folder_prefix + str(current_averaged) + ".h5")
+        model.save_weights(folder_prefix + str(current_averaged) + ".weights.h5")
         current_averaged += 1
 
     #average the sub_averages
     weight_set.clear()
     new_weights.clear()
     for i in range(current_averaged):
-        model.load_weights(folder_prefix + str(i) + ".h5")
+        model.load_weights(folder_prefix + str(i) + ".weights.h5")
         weight_set.append(model.get_weights())   
 
     for weights_list_tuple in zip(*weight_set): 

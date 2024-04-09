@@ -1,8 +1,11 @@
 import tensorflow as tf
 import os
 import gc
+import numpy as np
+import pandas as pd
 
-from utility import model_validation_loss
+import scipy.ndimage as scimage
+from utility import model_validation_loss, gaussian
 from SWAD_utility import AverageWeights
 
 
@@ -13,7 +16,7 @@ from SWAD_utility import AverageWeights
 #finds model weights from iteration with lowest validaion loss
 class checkpoint(tf.keras.callbacks.Callback):
 
-    def __init__(self, val_x, val_y):
+    def __init__(self, SWAD_Version, val_x, val_y):
         self.min_loss = float("inf")
         self.opt_weight = None
         self.val_x = val_x
@@ -32,6 +35,9 @@ class checkpoint(tf.keras.callbacks.Callback):
 
     def on_train_end(self, logs=None):
         self.model.set_weights(self.opt_weight)
+
+        df = pd.DataFrame(self.loss_tracker)
+        df.to_csv('loss.csv')
 
 
 
@@ -62,11 +68,14 @@ class SWAD_callback(tf.keras.callbacks.Callback):
     def on_train_batch_end(self, batch, logs=None):
         val_loss = model_validation_loss(self.model, self.val_x, self.val_y)
         self.loss_tracker.append(val_loss)
-        self.model.save_weights("Weights/weights_" + str(self.weights_saved) + ".h5")
+        self.model.save_weights("Weights/weights_" + str(self.weights_saved) + ".weights.h5")
         self.weights_saved += 1
 
     def on_train_end(self, logs=None):
-        ts, te = self.SWAD_Version(self.loss_tracker)
+        t = np.linspace(-len(self.loss_tracker)/2, len(self.loss_tracker)/2, len(self.loss_tracker))
+
+        ts, te = self.SWAD_Version(list(scimage.convolve(self.loss_tracker, gaussian(t, 8))))
+        print("TS: {} TE: {} GAP: {}".format(ts, te, te-ts))
         self.new_weights = AverageWeights(self.model, ts, te, 200)
 
         #set model weights to new average
