@@ -11,6 +11,8 @@ from utility import model_validation_loss
 from SWAD_algos import Original_SWAD
 from SWAD_algos import Proposed_SWADS
 from SWAD_algos import Proposed_SWADS_Alt1
+from SWAD_algos import Proposed_SWADS_Alt2
+from SWAD_algos import Proposed_SWADS_Alt3
 
 from SWAD_utility import AverageWeights
 from Callbacks import SWAD_callback
@@ -19,6 +21,8 @@ from Callbacks import checkpoint
 from Models.Resnet_18 import ResNet18
 from Models.Resnet_9 import ResNet9
 from Models.Custom_Model import CustomModel
+from Models.Robust_Resnet_18 import RobustResnet18
+from tensorflow.keras.applications.densenet import DenseNet121
 
 
 print("Num GPUs Available: {}".format(len(tf.config.list_physical_devices('GPU'))))
@@ -36,8 +40,8 @@ original_algo_widths = []
 results = []
 learning_rate = 0.0001
 batch_size = 32
-epochs = 40
-runs = 10
+epochs = 50
+runs = 1
 
 
 
@@ -60,9 +64,10 @@ for run in range(runs):
 
 
     #define model 
-    #model = ResNet9(2)
+    #model = RobustResnet18(2)
     #model.build(input_shape = (None,244,244,3))
     model = CustomModel(2, (244,244,3))
+    #model = DenseNet121(input_shape=(244,244,3), classes=2, weights=None)
 
     #define optimizer
     opt = tf.keras.optimizers.Adam(learning_rate=learning_rate) 
@@ -83,7 +88,7 @@ for run in range(runs):
                 batch_size=batch_size,
                 epochs=epochs,
                 shuffle=True,
-                callbacks=SWAD_callback(Proposed_SWADS_Alt1, val_x, val_y))
+                callbacks=checkpoint(Proposed_SWADS_Alt1, val_x, val_y))
 
 
     #Evaluate model on seen and unseen data

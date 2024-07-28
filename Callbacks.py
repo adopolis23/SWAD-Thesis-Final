@@ -21,6 +21,7 @@ class checkpoint(tf.keras.callbacks.Callback):
         self.opt_weight = None
         self.val_x = val_x
         self.val_y = val_y
+        self.SWAD_Version = SWAD_Version
 
         #list to save loss curve
         self.loss_tracker = []
@@ -35,6 +36,9 @@ class checkpoint(tf.keras.callbacks.Callback):
 
     def on_train_end(self, logs=None):
         self.model.set_weights(self.opt_weight)
+
+        ts, te = self.SWAD_Version(self.loss_tracker)
+        print("GAP: {}".format(te-ts))
 
         df = pd.DataFrame(self.loss_tracker)
         df.to_csv('loss.csv')
@@ -72,9 +76,10 @@ class SWAD_callback(tf.keras.callbacks.Callback):
         self.weights_saved += 1
 
     def on_train_end(self, logs=None):
-        t = np.linspace(-len(self.loss_tracker)/2, len(self.loss_tracker)/2, len(self.loss_tracker))
+        #t = np.linspace(-len(self.loss_tracker)/2, len(self.loss_tracker)/2, len(self.loss_tracker))
+        #ts, te = self.SWAD_Version(list(scimage.convolve(self.loss_tracker, gaussian(t, 8))))
+        ts, te = self.SWAD_Version(self.loss_tracker)
 
-        ts, te = self.SWAD_Version(list(scimage.convolve(self.loss_tracker, gaussian(t, 8))))
         print("TS: {} TE: {} GAP: {}".format(ts, te, te-ts))
         self.new_weights = AverageWeights(self.model, ts, te, 200)
 

@@ -4,9 +4,13 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import math
+import numpy as np
 
 from SWAD_utility import oneNGreaterThan
 from SWAD_utility import AveragedLoss
+
+import scipy.ndimage as scimage
+from utility import gaussian
 
 
 #Proposed SWAD-S algorithm
@@ -39,7 +43,7 @@ def Proposed_SWADS(val_loss, N = 5):
     return TS, TE
 
 
-def Proposed_SWADS_Alt1(val_loss, N=10, r=0.96):
+def Proposed_SWADS_Alt1(val_loss, N=20, r=0.96):
     min_index = val_loss.index(min(val_loss))
     TS = min_index
     TE = min_index + 1
@@ -61,6 +65,24 @@ def Proposed_SWADS_Alt1(val_loss, N=10, r=0.96):
         TE = len(val_loss)-1
     
     return TS, TE
+
+
+def Proposed_SWADS_Alt2(val_loss, N=20, r=0.96):
+    t = np.linspace(-len(val_loss)/2, len(val_loss)/2, len(val_loss))
+    ts, te = Proposed_SWADS_Alt1(list(scimage.convolve(val_loss, gaussian(t, 8))), N, r)
+
+    return ts, te
+
+
+def Proposed_SWADS_Alt3(val_loss, N=20, r=0.96):
+    
+    ts, _ = Proposed_SWADS_Alt1(val_loss)
+    _, te = Original_SWAD(val_loss)
+
+    if te <= ts:
+        te = ts + 1
+
+    return ts, te
 
 
 #return a start and end point from the original swad algorithm

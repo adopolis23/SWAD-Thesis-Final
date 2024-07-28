@@ -80,7 +80,7 @@ class ResnetBlock(Model):
 
 
 
-class ResNet18_exp(Model):
+class RobustResnet18(Model):
 
     def __init__(self, num_classes, **kwargs):
         """
